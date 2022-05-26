@@ -124,14 +124,29 @@ class MultiModalDataset(Dataset):
         frame_input, frame_mask = self.get_visual_feats(idx)
 
         # Step 2, load title tokens
-        title_input, title_mask = self.tokenize_text(self.anns[idx]['title'])
+        title = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
+        title_input, title_mask = self.tokenize_text(title)
 
+        asr = self.anns[idx]['asr'][:63] + self.anns[idx]['asr'][-64:]
+        asr_input, asr_mask = self.tokenize_text(asr)
+
+
+        if len(self.anns[idx]['ocr']) > 0:
+            ocr = self.anns[idx]['ocr'][0]['text']
+            ocr = ocr[:63] + ocr[-64:]
+            ocr_input, ocr_mask = self.tokenize_text(ocr)
+        else:
+            ocr_input, ocr_mask = self.tokenize_text('')
+
+        input = torch.cat([title_input, asr_input, ocr_input], 0)
+        mask = torch.cat([title_mask, asr_mask, ocr_mask], 0)
         # Step 3, summarize into a dictionary
         data = dict(
             frame_input=frame_input,
             frame_mask=frame_mask,
-            title_input=title_input,
-            title_mask=title_mask
+            title_input=input,
+            title_mask=mask,
+
         )
 
         # Step 4, load label if not test mode
