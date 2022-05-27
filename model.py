@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from transformers import BertModel
 from einops import rearrange
 from category_id_map import CATEGORY_ID_LIST
-
+from other import TransformerModel, MutiSelfAttention
 
 class MultiModal(nn.Module):
     def __init__(self, args):
@@ -14,16 +14,32 @@ class MultiModal(nn.Module):
         self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
         self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size,
                                  output_size=args.vlad_hidden_size, dropout=args.dropout)
+        bert_output_size = 768
+        bert_input_size = 512
         # TODO add attention
         self.enhance = SENet(channels=args.vlad_hidden_size, ratio=args.se_ratio)
         # self.attention = SelfAttention(1, 1, 1)
 
-        bert_output_size = 768
+
         # TODO replace the concatDense
         # self.fusion = MutiSelfAttention(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
         # v2 add residual PreNorm
-        # self.fusion = MutiSelfAttention(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
-        self.fusion = ConcatDenseSE(args.vlad_hidden_size + bert_output_size, args.fc_size, args.dropout, args.se_ratio)
+
+        out_dim = 1
+        embedding_dim = 512
+        num_heads = 4
+        num_layers = 4
+        hidden_dim = 128
+        # self.fusion = TransformerModel(
+        #     embedding_dim,
+        #     num_layers,
+        #     num_heads,
+        #     hidden_dim,
+        #     args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size
+        # )
+        self.fusion = MutiSelfAttention(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
+        # self.fusion = ConcatDenseSE(args.vlad_hidden_size + bert_output_size, args.fc_size, args.dropout, args.se_ratio)
+
         self.classifier = nn.Linear(args.fc_size, len(CATEGORY_ID_LIST))
 
     def forward(self, inputs, inference=False):
@@ -37,7 +53,9 @@ class MultiModal(nn.Module):
 
         # TODO replace the concatDense
         # final_embedding = self.fusion([vision_embedding, bert_embedding]) # baseline
-        final_embedding = self.fusion([vision_embedding, bert_embedding])
+        # attention fusion
+        sum_embedding = torch.cat([bert_embedding, vision_embedding], 1)
+        final_embedding = self.fusion(sum_embedding)
 
         prediction = self.classifier(final_embedding)
 
@@ -118,22 +136,7 @@ class SENet(nn.Module):
 
         return x
 
-class PreNorm(nn.Module):
-    def __init__(self, dim, fn):
-        super().__init__()
-        self.norm = nn.LayerNorm(dim)
-        self.fn = fn
 
-    def forward(self, x):
-        return self.fn(self.norm(x))
-
-class Residual(nn.Module):
-    def __init__(self, fn):
-        super().__init__()
-        self.fn = fn
-
-    def forward(self, x):
-        return self.fn(x) + x
 
 class SelfAttention(nn.Module):
     def __init__(self, dim_q, dim_k, dim_v):
@@ -185,44 +188,3 @@ class ConcatDenseSE(nn.Module):
         # embedding = self.attention(embedding)
 
         return embedding
-
-# TODO muti head attention
-class MutiSelfAttention(nn.Module):
-    def __init__(self, dim, vald_size, bert_size, dropout, output_size, heads=8):
-        super().__init__()
-        self.heads = heads
-        self.scale = dim ** -0.5
-        self.dim = dim
-        self.output_size = output_size
-        self.fusion_dropout = nn.Dropout(dropout)
-
-        self.to_qkv1 = nn.Linear(vald_size, output_size * 3, bias=False)
-        self.to_q2 = nn.Linear(bert_size, output_size, bias=False)
-        self.to_out = nn.Linear(2 * output_size, output_size) # 两个q合并了，维度乘2
-
-    def forward(self, x):   # x[0]: batch_size, feature num
-        b = x[0].shape
-        h = self.heads
-        x1 = x[0]   # expand the feature
-        qkv = self.to_qkv1(x1)
-        q, k, v = rearrange(qkv, 'b (qkv h d) -> qkv b h d', qkv=3, h=h)  # h: head t: feature num   d:feat vector
-
-        x2 = x[1]   # bert featrue
-        qkv = self.to_q2(x2)
-        q2 = rearrange(qkv, 'b (qkv h d) -> qkv b h d', qkv=1, h=h)
-
-        q2 = q2.squeeze(-4) # 在头部加个qkv维度
-
-        q = torch.cat((q, q2), axis=2)
-
-        dots = torch.einsum('bhid,bhjd->bhij', q.unsqueeze(3), k.unsqueeze(3)) * self.scale # 算相关度
-        attn = dots.softmax(dim=-1)
-
-        out = torch.einsum('bhij,bhjd->bhid', attn, v.unsqueeze(3))
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = torch.flatten(out, 1)
-
-        # v2 add drop out
-        out = self.fusion_dropout(out)
-        out = self.to_out(out)
-        return out

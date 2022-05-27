@@ -37,7 +37,7 @@ def parse_args():
 
     # ========================== Title BERT =============================
     # https://huggingface.co/hfl/chinese-macbert-base  hfl/chinese-macbert-base
-    parser.add_argument('--bert_dir', type=str, default='./chinese-macbert-base')
+    parser.add_argument('--bert_dir', type=str, default='./chinese-roberta-wwm-ext')
     parser.add_argument('--bert_cache', type=str, default='data/cache')
     parser.add_argument('--bert_seq_length', type=int, default=50)
     parser.add_argument('--bert_learning_rate', type=float, default=3e-5)
