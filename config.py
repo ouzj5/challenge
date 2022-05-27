@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--num_workers', default=4, type=int, help="num_workers for dataloaders")
 
     # ======================== SavedModel Configs =========================
-    parser.add_argument('--savedmodel_path', type=str, default='save/v1')
+    parser.add_argument('--savedmodel_path', type=str, default='save/v2')
     parser.add_argument('--ckpt_file', type=str, default='save/v1/model_.bin')
     parser.add_argument('--best_score', default=0.5, type=float, help='save checkpoint if mean_f1 > best_score')
 
@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument('--print_steps', type=int, default=20, help="Number of steps to log training metrics.")
     parser.add_argument('--warmup_steps', default=1000, type=int, help="warm ups for parameters not in bert or vit")
     parser.add_argument('--minimum_lr', default=0., type=float, help='minimum learning rate')
-    parser.add_argument('--learning_rate', default=5e-5, type=float, help='initial learning rate')
+    parser.add_argument('--learning_rate', default=3e-5, type=float, help='initial learning rate')
     parser.add_argument("--weight_decay", default=0.01, type=float, help="Weight deay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-6, type=float, help="Epsilon for Adam optimizer.")
 
