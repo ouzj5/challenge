@@ -23,8 +23,8 @@ class TransformerModel(nn.Module):
         for _ in range(depth):
             layers.extend(
                 [
-                    Residual(PreNorm(dim, MutiSelfAttention(1, vlad_hidden_size, bert_output_size, dropout, fc_size))),
-                    Residual(PreNorm(dim, FeedForward(dim, mlp_dim))),
+                    Residual(PreNorm(dim, MutiSelfAttention(1, vlad_hidden_size, bert_output_size, dropout, fc_size)), dropout),
+                    Residual(PreNorm(dim, FeedForward(dim, mlp_dim)), dropout),
                 ]
             )
         self.net = nn.Sequential(*layers)
@@ -46,12 +46,13 @@ class PreNorm(nn.Module):
         return self.fn(self.norm(x))
 
 class Residual(nn.Module):
-    def __init__(self, fn):
+    def __init__(self, fn, dropout):
         super().__init__()
         self.fn = fn
+        self.dropout_layer = nn.Dropout(dropout)
 
     def forward(self, x):
-        return self.fn(x) + x
+        return self.dropout_layer(self.fn(x)) + x
 
 class MutiSelfAttention(nn.Module):
     def __init__(self, dim, vald_size, bert_size, dropout, output_size, heads=8):

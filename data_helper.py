@@ -122,10 +122,10 @@ class MultiModalDataset(Dataset):
     def __getitem__(self, idx: int) -> dict:
         # Step 1, load visual features from zipfile.
         frame_input, frame_mask = self.get_visual_feats(idx)
-
+        '''
         # Step 2, load title tokens
-        # title = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
-        title = self.anns[idx]['title']
+        title = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
+        # title = self.anns[idx]['title']
         title_input, title_mask = self.tokenize_text(title)
 
         asr = self.anns[idx]['asr'][:63] + self.anns[idx]['asr'][-64:]
@@ -143,6 +143,14 @@ class MultiModalDataset(Dataset):
         input = torch.cat([title_input, asr_input, ocr_input], 0)
         mask = torch.cat([title_mask, asr_mask, ocr_mask], 0)
         # Step 3, summarize into a dictionary
+        '''
+        text = self.anns[idx]['title']
+        text += self.anns[idx]['asr']
+        if len(self.anns[idx]['ocr']) > 0:
+            text += self.anns[idx]['ocr'][0]['text']
+
+        input, mask = self.tokenize_text(text)
+
         data = dict(
             frame_input=frame_input,
             frame_mask=frame_mask,
