@@ -26,20 +26,22 @@ class MultiModal(nn.Module):
         # v2 add residual PreNorm
 
         out_dim = 1
-        embedding_dim = 512
+        embedding_dim = 1536
         num_heads = 4
         num_layers = 4
-        hidden_dim = 128
-        # self.fusion = TransformerModel(
-        #     embedding_dim,
-        #     num_layers,
-        #     num_heads,
-        #     hidden_dim,
-        #     args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size
-        # )
-        self.fusion = MutiSelfAttention(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
-        # self.fusion = ConcatDenseSE(args.vlad_hidden_size + bert_output_size, args.fc_size, args.dropout, args.se_ratio)
+        hidden_dim = 512    #
 
+        self.fusion = TransformerModel(
+            embedding_dim,
+            num_layers,
+            num_heads,
+            hidden_dim,
+            args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size
+        )
+
+        # self.fusion = MutiSelfAttention(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
+        # self.fusion = ConcatDenseSE(args.vlad_hidden_size + bert_output_size, args.fc_size, args.dropout, args.se_ratio)
+        self.video_to_bert = nn.Linear(args.vlad_hidden_size, bert_output_size)
         self.classifier = nn.Linear(args.fc_size, len(CATEGORY_ID_LIST))
 
     def forward(self, inputs, inference=False):
@@ -49,11 +51,13 @@ class MultiModal(nn.Module):
         vision_embedding = self.nextvlad(inputs['frame_input'], inputs['frame_mask'])
         # TODO add attention
         vision_embedding = self.enhance(vision_embedding)
+
         # vision_embedding = self.attention(vision_embedding)
 
         # TODO replace the concatDense
         # final_embedding = self.fusion([vision_embedding, bert_embedding]) # baseline
         # attention fusion
+        vision_embedding = self.video_to_bert(vision_embedding)
         sum_embedding = torch.cat([bert_embedding, vision_embedding], 1)
         final_embedding = self.fusion(sum_embedding)
 

@@ -28,9 +28,13 @@ class TransformerModel(nn.Module):
                 ]
             )
         self.net = nn.Sequential(*layers)
-
+        self.fusion_dropout = nn.Dropout(dropout)
+        self.cl_mlp = nn.Linear(bert_output_size * 2, fc_size)
     def forward(self, x):
-        return self.net(x)
+        x = self.net(x)
+        x = self.fusion_dropout(x)
+        x = self.cl_mlp(x)
+        return x
 
 class PreNorm(nn.Module):
     def __init__(self, dim, fn):
@@ -60,9 +64,9 @@ class MutiSelfAttention(nn.Module):
         self.bert_size = bert_size
         self.vald_size = vald_size
 
-        self.to_qkv1 = nn.Linear(bert_size, output_size * 3, bias=False)
-        self.to_q2 = nn.Linear(vald_size, output_size, bias=False)
-        self.to_out = nn.Linear(2 * output_size, output_size) # 两个q合并了，维度乘2
+        self.to_qkv1 = nn.Linear(bert_size, bert_size * 3, bias=False)
+        self.to_q2 = nn.Linear(bert_size, bert_size, bias=False)
+        self.to_out = nn.Linear(2 * bert_size, bert_size) # 两个q合并了，维度乘2
 
     def forward(self, x):   # x[0]: batch_size, feature num
         b = x[0].shape
@@ -87,6 +91,6 @@ class MutiSelfAttention(nn.Module):
         out = torch.flatten(out, 1)
 
         # v2 add drop out
-        out = self.fusion_dropout(out)
-        out = self.to_out(out)
+        # out = self.fusion_dropout(out)
+        # out = self.to_out(out)
         return out
