@@ -124,10 +124,12 @@ class MultiModalDataset(Dataset):
         frame_input, frame_mask = self.get_visual_feats(idx)
 
         # Step 2, load title tokens
-        title = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
+        # title = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
+        title = self.anns[idx]['title']
         title_input, title_mask = self.tokenize_text(title)
 
         asr = self.anns[idx]['asr'][:63] + self.anns[idx]['asr'][-64:]
+        # asr = self.anns[idx]['asr']
         asr_input, asr_mask = self.tokenize_text(asr)
 
 
