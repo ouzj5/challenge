@@ -144,10 +144,10 @@ class MultiModalDataset(Dataset):
         mask = torch.cat([title_mask, asr_mask, ocr_mask], 0)
         # Step 3, summarize into a dictionary
         '''
-        text = self.anns[idx]['title']
-        text += self.anns[idx]['asr']
+        text = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
+        text += self.anns[idx]['asr'][:63] + self.anns[idx]['asr'][-64:]
         if len(self.anns[idx]['ocr']) > 0:
-            text += self.anns[idx]['ocr'][0]['text']
+            text += self.anns[idx]['ocr'][0]['text'][:63] + self.anns[idx]['ocr'][0]['text'][-64:]
 
         input, mask = self.tokenize_text(text)
 
