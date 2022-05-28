@@ -83,7 +83,7 @@ class MultiModal(nn.Module):
         # final_embedding = self.fusion(sum_embedding, sum_embedding)
         # final_embedding = self.to_fc(final_embedding)
 
-        final_embedding = self.to_fc(bert_embedding)
+        final_embedding = self.to_fc(vision_embedding)
         prediction = self.classifier(final_embedding)
 
         if inference:
