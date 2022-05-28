@@ -49,7 +49,7 @@ class MultiModal(nn.Module):
         # AFF
         # self.video_to_bert = nn.Linear(args.vlad_hidden_size, bert_output_size)
         # self.fusion = AFF(bert_output_size * 2, 16)
-        # self.to_fc = nn.Linear(bert_output_size * 2, args.fc_size)
+        self.to_fc = nn.Linear(bert_output_size, args.fc_size)
 
         self.classifier = nn.Linear(args.fc_size, len(CATEGORY_ID_LIST))
 
@@ -75,7 +75,7 @@ class MultiModal(nn.Module):
         # sum_embedding = torch.cat([bert_embedding, vision_embedding], 1)
         # exchange pos
         sum_embedding = torch.cat([vision_embedding, bert_embedding], 1)
-        final_embedding = self.fusion(sum_embedding)
+        # final_embedding = self.fusion(sum_embedding)
 
         # AFF
         # vision_embedding = self.video_to_bert(vision_embedding)
@@ -83,6 +83,7 @@ class MultiModal(nn.Module):
         # final_embedding = self.fusion(sum_embedding, sum_embedding)
         # final_embedding = self.to_fc(final_embedding)
 
+        final_embedding = self.to_fc(bert_embedding)
         prediction = self.classifier(final_embedding)
 
         if inference:
