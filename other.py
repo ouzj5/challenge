@@ -139,3 +139,40 @@ class MutiSelfAttentionFusion(nn.Module):
         out = self.fusion_dropout(out)
         out = self.to_out(out)
         return out
+
+class AFF(nn.Module):
+    '''
+    多特征融合 AFF
+    '''
+
+    def __init__(self, channels=64, r=4):
+        super(AFF, self).__init__()
+        inter_channels = int(channels // r)
+
+        self.local_att = nn.Sequential(
+            nn.Linear(channels, inter_channels),
+            nn.BatchNorm1d(inter_channels),
+            nn.ReLU(inplace=True),
+            nn.Linear(inter_channels, channels),
+            nn.BatchNorm1d(channels),
+        )
+
+        self.global_att = nn.Sequential(
+            nn.Linear(channels, inter_channels),
+            nn.BatchNorm1d(inter_channels),
+            nn.ReLU(inplace=True),
+            nn.Linear(inter_channels, channels),
+            nn.BatchNorm1d(channels),
+        )
+
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x, residual):
+        xa = x + residual
+        xl = self.local_att(xa)
+        xg = self.global_att(xa)
+        xlg = xl + xg
+        wei = self.sigmoid(xlg)
+
+        xo = 2 * x * wei + 2 * residual * (1 - wei)
+        return xo
