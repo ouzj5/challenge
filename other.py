@@ -100,7 +100,9 @@ class MutiSelfAttentionFusion(nn.Module):
     def __init__(self, dim, vald_size, bert_size, dropout, output_size, heads=8):
         super().__init__()
         self.heads = heads
-        self.scale = bert_size ** -0.5
+        # 原来直接 scale 1
+        # self.scale = bert_size ** -0.5
+        self.scale = dim ** -0.5
         self.dim = dim
         self.output_size = output_size
         self.fusion_dropout = nn.Dropout(dropout)
