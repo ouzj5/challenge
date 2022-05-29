@@ -32,7 +32,7 @@ class TransformerModel(nn.Module):
         self.cl_mlp = nn.Linear(bert_output_size, fc_size)
     def forward(self, x):
         x = self.net(x)
-        x = x.flatten(2)
+        x = x.flatten(1, 2)     # 1到2 维度合并
         x = self.fusion_dropout(x)
         x = self.cl_mlp(x)
         return x
@@ -94,6 +94,7 @@ class MutiSelfAttention(nn.Module):
         # v2 add drop out
         out = self.fusion_dropout(out)
         out = self.to_out(out)
+
         return out
 
 class MutiSelfAttentionFusion(nn.Module):
