@@ -11,11 +11,14 @@ from other import TransformerModel, MutiSelfAttentionFusion, AFF
 class MultiModal(nn.Module):
     def __init__(self, args):
         super().__init__()
-        self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
-        self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size,
-                                 output_size=args.vlad_hidden_size, dropout=args.dropout)
         bert_output_size = 768
         bert_input_size = 512
+
+        self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
+        # self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=args.vlad_hidden_size, dropout=args.dropout)
+        # Transformer
+        self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=bert_output_size, dropout=args.dropout)
+
         # TODO add attention
         self.enhance = SENet(channels=args.vlad_hidden_size, ratio=args.se_ratio)
         # self.attention = SelfAttention(1, 1, 1)
@@ -25,10 +28,10 @@ class MultiModal(nn.Module):
         # v2 add residual PreNorm
 
         out_dim = 1
-        embedding_dim = 1536
+        embedding_dim = 768
         num_heads = 4
         num_layers = 4
-        hidden_dim = 512    #
+        hidden_dim = 256    #
 
         # transformer fusion
         self.video_to_bert = nn.Linear(args.vlad_hidden_size, bert_output_size)
@@ -55,12 +58,12 @@ class MultiModal(nn.Module):
 
     def forward(self, inputs, inference=False):
 
-        bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
-        # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['last_hidden_state']
+        # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
+        bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['last_hidden_state']
 
         vision_embedding = self.nextvlad(inputs['frame_input'], inputs['frame_mask'])
         # TODO add attention
-        vision_embedding = self.enhance(vision_embedding)
+        # vision_embedding = self.enhance(vision_embedding)
 
         # vision_embedding = self.attention(vision_embedding)
 
@@ -68,7 +71,7 @@ class MultiModal(nn.Module):
         # final_embedding = self.fusion([vision_embedding, bert_embedding]) # baseline
 
         # transformer fusion
-        vision_embedding = self.video_to_bert(vision_embedding)
+        # vision_embedding = self.video_to_bert(vision_embedding)
         sum_embedding = torch.cat([bert_embedding, vision_embedding], 1)
         final_embedding = self.fusion(sum_embedding)
 
@@ -120,7 +123,10 @@ class NeXtVLAD(nn.Module):
                                               bias=False)
         self.cluster_weight = torch.nn.Parameter(
             torch.nn.init.normal_(torch.rand(1, self.new_feature_size, self.cluster_size), std=0.01))
-        self.fc = torch.nn.Linear(self.new_feature_size * self.cluster_size, self.output_size)
+        # self.fc = torch.nn.Linear(self.new_feature_size * self.cluster_size, self.output_size)
+
+        # Transfromer project
+        self.fc = torch.nn.Linear(self.new_feature_size, self.output_size)
 
     def forward(self, inputs, mask):
         # todo mask
@@ -140,7 +146,10 @@ class NeXtVLAD(nn.Module):
         vlad = torch.matmul(activation, reshaped_input)
         vlad = vlad.permute(0, 2, 1).contiguous()
         vlad = F.normalize(vlad - a, p=2, dim=1)
-        vlad = vlad.reshape([-1, self.cluster_size * self.new_feature_size])
+        # vlad = vlad.reshape([-1, self.cluster_size * self.new_feature_size])
+
+        # Transformer project
+        vlad = vlad.transpose(2, 1)
         vlad = self.dropout(vlad)
         vlad = self.fc(vlad)
         return vlad
