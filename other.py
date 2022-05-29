@@ -32,6 +32,7 @@ class TransformerModel(nn.Module):
         self.cl_mlp = nn.Linear(bert_output_size, fc_size)
     def forward(self, x):
         x = self.net(x)
+        x = x.flatten(2)
         x = self.fusion_dropout(x)
         x = self.cl_mlp(x)
         return x
