@@ -123,7 +123,7 @@ class MultiModalDataset(Dataset):
         # Step 1, load visual features from zipfile.
         frame_input, frame_mask = self.get_visual_feats(idx)
         # 还是这种好一点
-        '''
+
         # Step 2, load title tokens
         title = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
         # title = self.anns[idx]['title']
@@ -143,15 +143,15 @@ class MultiModalDataset(Dataset):
 
         input = torch.cat([title_input, asr_input, ocr_input], 0)
         mask = torch.cat([title_mask, asr_mask, ocr_mask], 0)
-        '''
+
         # Step 3, summarize into a dictionary
 
-        text = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
-        text += self.anns[idx]['asr'][:63] + self.anns[idx]['asr'][-64:]
-        if len(self.anns[idx]['ocr']) > 0:
-            text += self.anns[idx]['ocr'][0]['text'][:63] + self.anns[idx]['ocr'][0]['text'][-64:]
+        # text = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
+        # text += self.anns[idx]['asr'][:63] + self.anns[idx]['asr'][-64:]
+        # if len(self.anns[idx]['ocr']) > 0:
+        #     text += self.anns[idx]['ocr'][0]['text'][:63] + self.anns[idx]['ocr'][0]['text'][-64:]
 
-        input, mask = self.tokenize_text(text)
+        # input, mask = self.tokenize_text(text)
 
         data = dict(
             frame_input=frame_input,

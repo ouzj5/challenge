@@ -23,7 +23,7 @@ class TransformerModel(nn.Module):
         for _ in range(depth):
             layers.extend(
                 [
-                    Residual(PreNorm(dim, MutiSelfAttention(1, vlad_hidden_size, bert_output_size, dropout, fc_size)), dropout),
+                    Residual(PreNorm(dim, MutiSelfAttention(1, vlad_hidden_size, bert_output_size, dropout, fc_size, heads)), dropout),
                     Residual(PreNorm(dim, FeedForward(dim, mlp_dim)), dropout),
                 ]
             )

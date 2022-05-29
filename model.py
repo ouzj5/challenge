@@ -31,17 +31,17 @@ class MultiModal(nn.Module):
         hidden_dim = 512    #
 
         # transformer fusion
-        # self.video_to_bert = nn.Linear(args.vlad_hidden_size, bert_output_size)
-        # self.fusion = TransformerModel(
-        #     embedding_dim,
-        #     num_layers,
-        #     num_heads,
-        #     hidden_dim,
-        #     args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size
-        # )
+        self.video_to_bert = nn.Linear(args.vlad_hidden_size, bert_output_size)
+        self.fusion = TransformerModel(
+            embedding_dim,
+            num_layers,
+            num_heads,
+            hidden_dim,
+            args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size
+        )
 
         # attention
-        self.fusion = MutiSelfAttentionFusion(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
+        # self.fusion = MutiSelfAttentionFusion(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
 
         # baseline
         # self.fusion = ConcatDenseSE( args.vlad_hidden_size + bert_output_size, args.fc_size, args.dropout, args.se_ratio)
@@ -55,7 +55,8 @@ class MultiModal(nn.Module):
 
     def forward(self, inputs, inference=False):
 
-        bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
+        # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
+        bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['last_hidden_state']
 
         vision_embedding = self.nextvlad(inputs['frame_input'], inputs['frame_mask'])
         # TODO add attention
