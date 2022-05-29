@@ -52,7 +52,7 @@ class MultiModal(nn.Module):
         # AFF
         # self.video_to_bert = nn.Linear(args.vlad_hidden_size, bert_output_size)
         # self.fusion = AFF(bert_output_size * 2, 16)
-        self.to_fc = nn.Linear(args.vlad_hidden_size, args.fc_size)
+        # self.to_fc = nn.Linear(args.vlad_hidden_size, args.fc_size)
 
         self.classifier = nn.Linear(args.fc_size, len(CATEGORY_ID_LIST))
 
