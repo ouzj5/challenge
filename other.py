@@ -29,10 +29,11 @@ class TransformerModel(nn.Module):
             )
         self.net = nn.Sequential(*layers)
         self.fusion_dropout = nn.Dropout(dropout)
-        self.cl_mlp = nn.Linear(bert_output_size, fc_size)
+        self.cl_mlp = nn.Linear(bert_output_size * 214, fc_size)
     def forward(self, x):
         x = self.net(x)
         x = x.flatten(1, 2)     # 1到2 维度合并
+        # print (x.shape)
         x = self.fusion_dropout(x)
         x = self.cl_mlp(x)
         return x
