@@ -62,5 +62,7 @@ class UniBert(BertPreTrainedModel):
         embedding_output = torch.cat([text_emb, video_emb], 1)
         mask = torch.cat([text_mask, video_mask], 1)
         mask = mask[:, None, None, :]
+        mask = (1.0 - mask) * -10000.0
+
         encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
         return encoder_outputs
