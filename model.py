@@ -7,6 +7,8 @@ from transformers import BertModel
 from einops import rearrange
 from category_id_map import CATEGORY_ID_LIST
 from other import TransformerModel, MutiSelfAttentionFusion, AFF
+from transformers.models.bert.modeling_bert import BertConfig, BertOnlyMLMHead
+from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertEmbeddings, BertEncoder
 
 class MultiModal(nn.Module):
     def __init__(self, args):
@@ -15,7 +17,16 @@ class MultiModal(nn.Module):
         bert_input_size = 512
 
         self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
-        self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=args.vlad_hidden_size, dropout=args.dropout)
+        config = BertConfig.from_pretrained(f'./chinese-roberta-wwm-ext/config.json')
+
+        # self.video_fc = torch.nn.Linear(1536, config.hidden_size)
+        self.word_embeddings = BertEmbeddings(config)
+        self.video_embeddings = BertEmbeddings(config)
+        self.encoder = BertEncoder(config)
+
+        self.newfc_hidden = torch.nn.Linear(bert_output_size, args.fc_size)
+
+        # self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=args.vlad_hidden_size, dropout=args.dropout)
 
         # Transformer
         # self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=bert_output_size, dropout=args.dropout)
@@ -45,7 +56,7 @@ class MultiModal(nn.Module):
         # )
 
         # attention
-        self.fusion = MutiSelfAttentionFusion(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
+        # self.fusion = MutiSelfAttentionFusion(1, args.vlad_hidden_size, bert_output_size, args.dropout, args.fc_size)
 
         # baseline
         # self.fusion = ConcatDenseSE( args.vlad_hidden_size + bert_output_size, args.fc_size, args.dropout, args.se_ratio)
@@ -58,14 +69,36 @@ class MultiModal(nn.Module):
         self.classifier = nn.Linear(args.fc_size, len(CATEGORY_ID_LIST))
 
     def forward(self, inputs, inference=False):
+        # unbert fusion
+        # input frame feature and text input
+        text_emb = self.bert(inputs['title_input'])['last_hidden_state']
+        cls_emb = text_emb[:, 0:1, :]
+        text_emb = text_emb[:, 1:, :]
 
-        bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
+        cls_mask = inputs['title_mask'][:, 0:1]
+        text_mask = inputs['title_mask'][:, 1:]
+
+        video_emb = self.video_embeddings(inputs_embeds=inputs['frame_input'])
+
+        embedding_output = torch.cat([cls_emb, video_emb, text_emb], 1)
+
+        mask = torch.cat([cls_mask, inputs['frame_mask'], text_mask], 1)
+        mask = mask[:, None, None, :]
+        mask = (1.0 - mask) * -10000.0
+
+        # encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
+        encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['pooler_output']
+
+        final_embedding = self.newfc_hidden(encoder_outputs)
+
+
+
+        # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
         # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['last_hidden_state']
 
-        vision_embedding = self.nextvlad(inputs['frame_input'], inputs['frame_mask'])
+        # vision_embedding = self.nextvlad(inputs['frame_input'], inputs['frame_mask'])
         # TODO add attention
-        vision_embedding = self.enhance(vision_embedding)
-
+        # vision_embedding = self.enhance(vision_embedding)
         # vision_embedding = self.attention(vision_embedding)
 
         # TODO replace the concatDense
@@ -73,8 +106,8 @@ class MultiModal(nn.Module):
 
         # transformer fusion
         # vision_embedding = self.video_to_bert(vision_embedding)
-        sum_embedding = torch.cat([bert_embedding, vision_embedding], 1)
-        final_embedding = self.fusion(sum_embedding)
+        # sum_embedding = torch.cat([bert_embedding, vision_embedding], 1)
+        # final_embedding = self.fusion(sum_embedding)
 
         # attention fusion
         # sum_embedding = torch.cat([bert_embedding, vision_embedding], 1)
