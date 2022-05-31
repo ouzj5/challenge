@@ -100,7 +100,7 @@ class MultiModal(nn.Module):
 
         # encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
 
-        encoder_outputs = self.unibert(inputs['frame_input'], inputs['frame_mask'], inputs['text_input'], inputs['text_mask'])
+        encoder_outputs = self.unibert(inputs['frame_input'], inputs['frame_mask'], inputs['title_input'], inputs['title_mask'])
         # encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
 
         # encoder_outputs = torch.mean(encoder_outputs, 1)
