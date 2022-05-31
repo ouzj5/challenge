@@ -71,24 +71,25 @@ class MultiModal(nn.Module):
     def forward(self, inputs, inference=False):
         # unbert fusion
         # input frame feature and text input
-        text_emb = self.bert(inputs['title_input'], inputs['title_mask'])['last_hidden_state']
+        # text_emb = self.bert(inputs['title_input'])['last_hidden_state']
+        input_idx = inputs['title_input']
+        text_emb = self.word_embeddings(input_ids=input_idx)
         cls_emb = text_emb[:, 0:1, :]
         text_emb = text_emb[:, 1:, :]
 
         cls_mask = inputs['title_mask'][:, 0:1]
         text_mask = inputs['title_mask'][:, 1:]
 
-        video_emb = self.video_embeddings(inputs_embeds=inputs['frame_input'], attention_mask=inputs['frame_mask'])
+        video_emb = self.video_embeddings(inputs_embeds=inputs['frame_input'])
 
         embedding_output = torch.cat([cls_emb, video_emb, text_emb], 1)
 
-        # mask = torch.cat([cls_mask, inputs['frame_mask'], text_mask], 1)
-        # mask = mask[:, None, None, :]
-        # mask = (1.0 - mask) * -10000.0
+        mask = torch.cat([cls_mask, inputs['frame_mask'], text_mask], 1)
+        mask = mask[:, None, None, :]
+        mask = (1.0 - mask) * -10000.0
 
-
-        # encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
-        encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
+        encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
+        # encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
         encoder_outputs = torch.mean(encoder_outputs, 1)
         final_embedding = self.newfc_hidden(encoder_outputs)
         final_embedding = torch.nn.functional.normalize(final_embedding, p=2, dim=1)

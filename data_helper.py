@@ -143,7 +143,7 @@ class MultiModalDataset(Dataset):
 
         input = torch.cat([title_input, asr_input, ocr_input], 0)
         mask = torch.cat([title_mask, asr_mask, ocr_mask], 0)
-
+        
         # Step 3, summarize into a dictionary
 
         # text = self.anns[idx]['title'][:63] + self.anns[idx]['title'][-64: ]
