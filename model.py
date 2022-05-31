@@ -87,10 +87,10 @@ class MultiModal(nn.Module):
         mask = (1.0 - mask) * -10000.0
 
         # encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
-        encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['pooler_output']
-
+        encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
+        encoder_outputs = torch.mean(encoder_outputs, 1)
         final_embedding = self.newfc_hidden(encoder_outputs)
-
+        final_embedding = torch.nn.functional.normalize(final_embedding, p=2, dim=1)
 
 
         # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
