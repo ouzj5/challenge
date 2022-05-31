@@ -35,8 +35,8 @@ class UniBert(BertPreTrainedModel):
     # Copied from transformers.models.bert.modeling_bert.BertModel.forward
     # inuput frame
     def forward(self, video_feature, video_mask, text_input_ids, text_mask, gather_index=None):
+        '''
         text_emb = self.embeddings(input_ids=text_input_ids)
-
         # text input is [CLS][SEP] t e x t [SEP]
         cls_emb = text_emb[:, 0:1, :]
         text_emb = text_emb[:, 1:, :]
@@ -54,6 +54,12 @@ class UniBert(BertPreTrainedModel):
         mask = torch.cat([cls_mask, video_mask, text_mask], 1)
         mask = mask[:, None, None, :]
         mask = (1.0 - mask) * -10000.0
+        '''
 
+        text_emb = self.embeddings(input_ids=text_input_ids)
+        video_emb = self.video_embeddings(inputs_embeds=video_feature)
+
+        embedding_output = torch.cat([text_emb, video_emb], 1)
+        mask = torch.cat([text_mask, video_mask], 1)
         encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
         return encoder_outputs

@@ -74,40 +74,11 @@ class MultiModal(nn.Module):
         self.classifier = nn.Linear(bert_output_size, len(CATEGORY_ID_LIST))
 
     def forward(self, inputs, inference=False):
-        # unbert fusion
-        # input frame feature and text input
-        # text_emb = self.bert(inputs['title_input'])['last_hidden_state']
-        # input_idx = inputs['title_input']
-        # text_emb = self.word_embeddings(input_ids=input_idx)
-        # cls_emb = text_emb[:, 0:1, :]
-        # text_emb = text_emb[:, 1:, :]
-
-        # cls_mask = inputs['title_mask'][:, 0:1]
-        # text_mask = inputs['title_mask'][:, 1:]
-
-        # video_emb = self.video_embeddings(inputs_embeds=inputs['frame_input'])
-
-        # embedding_output = torch.cat([cls_emb, video_emb, text_emb], 1)
-        # embedding_output = torch.cat([text_emb, video_emb], 1)
-
-        # mask = torch.cat([cls_mask, inputs['frame_mask'], text_mask], 1)
-        # mask = torch.cat([cls_mask, inputs['frame_mask'], text_mask], 1)
-        # mask = mask[:, None, None, :]
-        # mask = (1.0 - mask) * -10000.0
-
-        # mask = torch.cat([inputs['title_mask'], inputs['frame_mask']], 1)
-        # mask = mask[:, None, None, :]
-
-        # encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
-
+        # unibert fusion
         encoder_outputs = self.unibert(inputs['frame_input'], inputs['frame_mask'], inputs['title_input'], inputs['title_mask'])
-        # encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
-
-        # encoder_outputs = torch.mean(encoder_outputs, 1)
-        # final_embedding = self.newfc_hidden(encoder_outputs)
-        # final_embedding = torch.nn.functional.normalize(final_embedding, p=2, dim=1)
         final_embedding = torch.relu(encoder_outputs[:, 0, :])
 
+        # baseline
         # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
         # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['last_hidden_state']
 
