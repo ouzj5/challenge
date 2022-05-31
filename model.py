@@ -86,6 +86,7 @@ class MultiModal(nn.Module):
         # mask = mask[:, None, None, :]
         # mask = (1.0 - mask) * -10000.0
 
+
         # encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
         encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
         encoder_outputs = torch.mean(encoder_outputs, 1)
