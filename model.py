@@ -92,6 +92,8 @@ class MultiModal(nn.Module):
         # mask = (1.0 - mask) * -10000.0
 
         mask = torch.cat([inputs['title_mask'], inputs['frame_mask']], 1)
+        mask = mask[:, None, None, :]
+
         encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
         # encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
 
