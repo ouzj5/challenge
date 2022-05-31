@@ -66,7 +66,8 @@ class MultiModal(nn.Module):
         # self.fusion = AFF(bert_output_size * 2, 16)
         # self.to_fc = nn.Linear(args.vlad_hidden_size, args.fc_size)
 
-        self.classifier = nn.Linear(args.fc_size, len(CATEGORY_ID_LIST))
+        # self.classifier = nn.Linear(args.fc_size, len(CATEGORY_ID_LIST))
+        self.classifier = nn.Linear(bert_output_size, len(CATEGORY_ID_LIST))
 
     def forward(self, inputs, inference=False):
         # unbert fusion
