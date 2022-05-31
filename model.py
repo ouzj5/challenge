@@ -90,10 +90,11 @@ class MultiModal(nn.Module):
 
         encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
         # encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
-        encoder_outputs = torch.mean(encoder_outputs, 1)
-        final_embedding = self.newfc_hidden(encoder_outputs)
-        final_embedding = torch.nn.functional.normalize(final_embedding, p=2, dim=1)
 
+        # encoder_outputs = torch.mean(encoder_outputs, 1)
+        # final_embedding = self.newfc_hidden(encoder_outputs)
+        # final_embedding = torch.nn.functional.normalize(final_embedding, p=2, dim=1)
+        final_embedding = torch.relu(encoder_outputs[:, 0, :])
 
         # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
         # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['last_hidden_state']
