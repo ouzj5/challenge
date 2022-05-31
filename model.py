@@ -10,6 +10,9 @@ from other import TransformerModel, MutiSelfAttentionFusion, AFF
 from transformers.models.bert.modeling_bert import BertConfig, BertOnlyMLMHead
 from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertEmbeddings, BertEncoder
 
+from unibert import UniBert
+
+
 class MultiModal(nn.Module):
     def __init__(self, args):
         super().__init__()
@@ -26,6 +29,7 @@ class MultiModal(nn.Module):
 
         self.newfc_hidden = torch.nn.Linear(bert_output_size, args.fc_size)
 
+        self.unibert = UniBert(config)
         # self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=args.vlad_hidden_size, dropout=args.dropout)
 
         # Transformer
@@ -73,28 +77,30 @@ class MultiModal(nn.Module):
         # unbert fusion
         # input frame feature and text input
         # text_emb = self.bert(inputs['title_input'])['last_hidden_state']
-        input_idx = inputs['title_input']
-        text_emb = self.word_embeddings(input_ids=input_idx)
+        # input_idx = inputs['title_input']
+        # text_emb = self.word_embeddings(input_ids=input_idx)
         # cls_emb = text_emb[:, 0:1, :]
         # text_emb = text_emb[:, 1:, :]
 
         # cls_mask = inputs['title_mask'][:, 0:1]
         # text_mask = inputs['title_mask'][:, 1:]
 
-        video_emb = self.video_embeddings(inputs_embeds=inputs['frame_input'])
+        # video_emb = self.video_embeddings(inputs_embeds=inputs['frame_input'])
 
         # embedding_output = torch.cat([cls_emb, video_emb, text_emb], 1)
-        embedding_output = torch.cat([text_emb, video_emb], 1)
+        # embedding_output = torch.cat([text_emb, video_emb], 1)
 
         # mask = torch.cat([cls_mask, inputs['frame_mask'], text_mask], 1)
         # mask = torch.cat([cls_mask, inputs['frame_mask'], text_mask], 1)
         # mask = mask[:, None, None, :]
         # mask = (1.0 - mask) * -10000.0
 
-        mask = torch.cat([inputs['title_mask'], inputs['frame_mask']], 1)
-        mask = mask[:, None, None, :]
+        # mask = torch.cat([inputs['title_mask'], inputs['frame_mask']], 1)
+        # mask = mask[:, None, None, :]
 
-        encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
+        # encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
+
+        encoder_outputs = self.unibert(inputs['frame_input'], inputs['frame_mask'], inputs['text_input'], inputs['text_mask'])
         # encoder_outputs = self.encoder(embedding_output)['last_hidden_state']
 
         # encoder_outputs = torch.mean(encoder_outputs, 1)
