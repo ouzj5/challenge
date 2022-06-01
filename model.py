@@ -19,11 +19,14 @@ class MultiModal(nn.Module):
         bert_output_size = 768
         bert_input_size = 512
 
-        self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
+        # self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
         # config = BertConfig.from_pretrained(f'./chinese-roberta-wwm-ext/config.json')
+
+
         config = BertConfig.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
         # unibert
-        self.unibert = UniBert(config)
+
+        self.unibert = UniBert.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
 
         # self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=args.vlad_hidden_size, dropout=args.dropout)
 
