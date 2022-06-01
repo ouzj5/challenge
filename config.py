@@ -32,12 +32,12 @@ def parse_args():
     parser.add_argument('--warmup_steps', default=1000, type=int, help="warm ups for parameters not in bert or vit")
     parser.add_argument('--minimum_lr', default=0., type=float, help='minimum learning rate')
     # tran 2e-5 att 3e-5
-    parser.add_argument('--learning_rate', default=3e-5, type=float, help='initial learning rate')
+    parser.add_argument('--learning_rate', default=5e-5, type=float, help='initial learning rate')
     parser.add_argument("--weight_decay", default=0.01, type=float, help="Weight deay if we apply some.")
     parser.add_argument("--adam_epsilon", default=1e-6, type=float, help="Epsilon for Adam optimizer.")
 
     # ========================== Title BERT =============================
-    parser.add_argument('--bert_dir', type=str, default='./chinese-roberta-wwm-ext')
+    parser.add_argument('--bert_dir', type=str, default='./chinese-macbert-base')
     parser.add_argument('--bert_cache', type=str, default='data/cache')
     parser.add_argument('--bert_seq_length', type=int, default=50)
     parser.add_argument('--bert_learning_rate', type=float, default=3e-5)

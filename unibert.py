@@ -16,8 +16,9 @@ class UniBert(BertPreTrainedModel):
         self.config = config
 
         self.embeddings = BertEmbeddings(config)
-        self.video_fc = torch.nn.Linear(1536, config.hidden_size)
+        self.video_fc = torch.nn.Linear(768, config.hidden_size)
         self.video_embeddings = BertEmbeddings(config)
+
         self.encoder = BertEncoder(config)
 
         self.init_weights()
@@ -57,7 +58,9 @@ class UniBert(BertPreTrainedModel):
         '''
 
         text_emb = self.embeddings(input_ids=text_input_ids)
-        video_emb = self.video_embeddings(inputs_embeds=video_feature)
+        video_emb = self.video_fc(video_feature)
+        video_emb = gelu(video_emb)
+        # video_emb = self.video_embeddings(inputs_embeds=video_emb)
 
         embedding_output = torch.cat([text_emb, video_emb], 1)
         mask = torch.cat([text_mask, video_mask], 1)
@@ -66,3 +69,10 @@ class UniBert(BertPreTrainedModel):
 
         encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
         return encoder_outputs
+
+def gelu(x):
+    """Implementation of the gelu activation function.
+    For information: OpenAI GPT's gelu is slightly different (and gives slightly different results):
+    0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
+    """
+    return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))

@@ -21,15 +21,9 @@ class MultiModal(nn.Module):
 
         self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
         config = BertConfig.from_pretrained(f'./chinese-roberta-wwm-ext/config.json')
-
-        # self.video_fc = torch.nn.Linear(1536, config.hidden_size)
-        self.word_embeddings = BertEmbeddings(config)
-        self.video_embeddings = BertEmbeddings(config)
-        self.encoder = BertEncoder(config)
-
-        self.newfc_hidden = torch.nn.Linear(bert_output_size, args.fc_size)
-
+        # unibert
         self.unibert = UniBert(config)
+
         # self.nextvlad = NeXtVLAD(args.frame_embedding_size, args.vlad_cluster_size, output_size=args.vlad_hidden_size, dropout=args.dropout)
 
         # Transformer
