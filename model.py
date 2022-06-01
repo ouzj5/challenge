@@ -20,7 +20,8 @@ class MultiModal(nn.Module):
         bert_input_size = 512
 
         self.bert = BertModel.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
-        config = BertConfig.from_pretrained(f'./chinese-roberta-wwm-ext/config.json')
+        # config = BertConfig.from_pretrained(f'./chinese-roberta-wwm-ext/config.json')
+        config = BertConfig.from_pretrained(args.bert_dir, cache_dir=args.bert_cache)
         # unibert
         self.unibert = UniBert(config)
 
