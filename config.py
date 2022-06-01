@@ -37,10 +37,10 @@ def parse_args():
     parser.add_argument("--adam_epsilon", default=1e-6, type=float, help="Epsilon for Adam optimizer.")
 
     # ========================== Title BERT =============================
-    parser.add_argument('--bert_dir', type=str, default='./chinese-macbert-base')
+    parser.add_argument('--bert_dir', type=str, default='./chinese-roberta-wwm-ext')
     parser.add_argument('--bert_cache', type=str, default='data/cache')
     parser.add_argument('--bert_seq_length', type=int, default=50)
-    parser.add_argument('--bert_learning_rate', type=float, default=3e-5)
+    parser.add_argument('--bert_learning_rate', type=float, default=5e-5)
     parser.add_argument('--bert_warmup_steps', type=int, default=5000)
     parser.add_argument('--bert_max_steps', type=int, default=30000)
     parser.add_argument("--bert_hidden_dropout_prob", type=float, default=0.1)
