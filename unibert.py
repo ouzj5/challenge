@@ -61,7 +61,7 @@ class UniBert(BertPreTrainedModel):
         text_emb = self.embeddings(input_ids=text_input_ids)
         video_emb = self.video_fc(video_feature)
         video_emb = gelu(video_emb)
-        # video_emb = self.video_embeddings(inputs_embeds=video_emb)
+        video_emb = self.video_embeddings(inputs_embeds=video_emb)
 
         embedding_output = torch.cat([text_emb, video_emb], 1)
         mask = torch.cat([text_mask, video_mask], 1)
