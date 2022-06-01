@@ -7,7 +7,7 @@ from transformers import BertModel
 from einops import rearrange
 from category_id_map import CATEGORY_ID_LIST
 from other import TransformerModel, MutiSelfAttentionFusion, AFF
-from transformers.models.bert.modeling_bert import BertConfig, BertOnlyMLMHead
+from transformers.models.bert.modeling_bert import BertConfig, BertOnlyMLMHead, BertPooler
 from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertEmbeddings, BertEncoder
 
 class UniBert(BertPreTrainedModel):
@@ -21,6 +21,7 @@ class UniBert(BertPreTrainedModel):
 
         self.encoder = BertEncoder(config)
 
+        self.pooler = BertPooler(config)
         self.init_weights()
 
     def get_input_embeddings(self):
@@ -67,8 +68,11 @@ class UniBert(BertPreTrainedModel):
         mask = mask[:, None, None, :]
         mask = (1.0 - mask) * -10000.0
 
-        encoder_outputs = self.encoder(embedding_output, attention_mask=mask)['last_hidden_state']
-        return encoder_outputs
+        encoder_outputs = self.encoder(embedding_output, attention_mask=mask) # ['last_hidden_state']
+
+        sequence_output = encoder_outputs[0]
+        pooled_output = self.pooler(sequence_output)
+        return pooled_output
 
 def gelu(x):
     """Implementation of the gelu activation function.

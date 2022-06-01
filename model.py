@@ -70,7 +70,7 @@ class MultiModal(nn.Module):
     def forward(self, inputs, inference=False):
         # unibert fusion
         encoder_outputs = self.unibert(inputs['frame_input'], inputs['frame_mask'], inputs['title_input'], inputs['title_mask'])
-        final_embedding = torch.relu(encoder_outputs[:, 0, :])
+        final_embedding = torch.relu(encoder_outputs)
 
         # baseline
         # bert_embedding = self.bert(inputs['title_input'], inputs['title_mask'])['pooler_output']
